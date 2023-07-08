@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import shortid from "shortid";
 import { WrapperPhonebook } from "./components/phonebookwrapper/phonebookwrapper";
 import { Title } from "./components/title/title";
 import { InputForm } from "./components/addform/addform";
