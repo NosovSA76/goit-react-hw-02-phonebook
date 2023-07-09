@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { SearchName, SearchInput, SearhField } from "./search.styled";
 
 export const Search = ({ text, valueSearch, onChange }) => {
@@ -10,4 +11,10 @@ export const Search = ({ text, valueSearch, onChange }) => {
       </SearchName>
     </SearhField>
   );
+};
+
+Search.propTypes = {
+  text: PropTypes.string.isRequired,
+  valueSearch: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 };

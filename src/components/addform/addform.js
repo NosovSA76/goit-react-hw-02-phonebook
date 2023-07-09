@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import shortid from "shortid";
+import PropTypes from "prop-types";
 import {
   NameInputTitle,
   NameInput,
@@ -74,7 +75,7 @@ export class InputForm extends Component {
     );
 
     if (existingContactByName) {
-      alert(`Такий контакт вже існує`);
+      alert(`Such a contact already exists`);
       return;
     }
 
@@ -122,3 +123,15 @@ export class InputForm extends Component {
     );
   }
 }
+
+InputForm.propTypes = {
+  contacts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      phone: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onUpdateContact: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};

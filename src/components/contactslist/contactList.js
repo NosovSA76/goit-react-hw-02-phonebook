@@ -1,4 +1,6 @@
 import React from "react";
+import PropTypes from "prop-types";
+import { FcCellPhone, FcBusinessman } from "react-icons/fc";
 import {
   ContactListContainer,
   ContactListItem,
@@ -6,7 +8,6 @@ import {
   ContactsPhone,
   DeleteContacts,
 } from "./contactList.styled";
-import { FcCellPhone, FcBusinessman } from "react-icons/fc";
 
 export const ContactList = ({ contacts, onDeleteContact }) => {
   return (
@@ -28,4 +29,15 @@ export const ContactList = ({ contacts, onDeleteContact }) => {
       ))}
     </ContactListContainer>
   );
+};
+
+ContactList.propTypes = {
+  contacts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      phone: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onDeleteContact: PropTypes.func.isRequired,
 };
