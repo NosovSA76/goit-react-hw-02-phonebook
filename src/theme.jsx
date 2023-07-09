@@ -2,9 +2,10 @@ export const theme = {
   colors: {
     backmaine: '#c9f0e7',
     backnorm: '#76bbe8',
-    backhover: '#2e2b2b'
+    backhover: '#1ddb16',
+    backhoverSecond: '#8B0000'
   },
-  space: [0, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+  space: [0, 2, 4, 8, 16, 32, 64, 158, 256, 512],
   fonts: {
     body: 'system-ui, sans-serif',
     heading: 'Roboto',

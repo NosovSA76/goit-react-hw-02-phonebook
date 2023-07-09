@@ -5,6 +5,13 @@ import { InputForm } from "./components/addform/addform";
 import { ContactsTitle } from "./components/contacttitle/contactTitle";
 import { Search } from "./components/search/search";
 import { ContactList } from "./components/contactslist/contactList";
+import { ShowButton } from "./components/showButton/showButton";
+import { CountMessage } from "./components/countMessage/CountMessage";
+import { getCountMessage } from "./utils/getCountMessage";
+import { updateContact } from "./utils/updateContact";
+import { deleteContact } from "./utils/deleteContact";
+import { writeContact } from "./utils/writeContact";
+import { toggleSecondButtonVisibility } from "./utils/toggleSecondButtonVisibility";
 
 export class App extends Component {
   state = {
@@ -13,77 +20,78 @@ export class App extends Component {
     isSecondButtonVisible: false,
   };
 
+  componentDidMount() {
+    this.setState({ isSecondButtonVisible: true });
+  }
+
   ChangeFilter = (e) => {
     this.setState({ searchText: e.currentTarget.value });
   };
 
-  deleteContact = (contactID) => {
-    this.setState(
-      (prevState) => ({
-        contacts: prevState.contacts.filter(
-          (contact) => contact.id !== contactID
-        ),
-      }),
-      () => {
-        if (this.state.contacts.length === 0) {
-          this.setState({ isSecondButtonVisible: false });
-        }
-      }
+  handleUpdateContact = (contactId, updatedContact) => {
+    this.setState((prevState) =>
+      updateContact(prevState, contactId, updatedContact)
     );
   };
 
-  WriteContact = (newContact) => {
-    this.setState((prevState) => ({
-      contacts: [...prevState.contacts, newContact].sort((a, b) =>
-        a.name.localeCompare(b.name)
-      ),
-      isSecondButtonVisible: true, // Встановлюємо isSecondButtonVisible в true після додавання контакту
-    }));
+  handleDeleteContact = (contactID) => {
+    this.setState((prevState) => deleteContact(prevState, contactID));
   };
 
-  toggleSecondButtonVisibility = () => {
-    this.setState((prevState) => ({
-      isSecondButtonVisible: !prevState.isSecondButtonVisible,
-    }));
+  handleWriteContact = (newContact) => {
+    this.setState((prevState) => writeContact(prevState, newContact));
+  };
+
+  handleToggleSecondButtonVisibility = () => {
+    this.setState((prevState) => toggleSecondButtonVisibility(prevState));
   };
 
   render() {
-    const { searchText, isSecondButtonVisible, contacts } = this.state;
+    const { searchText, contacts, isSearchVisible } = this.state;
     const normalSearchText = searchText.toLocaleLowerCase();
     const filterContacts = contacts.filter((contact) =>
       contact.name.toLocaleLowerCase().includes(normalSearchText)
     );
 
-    const isNoContacts = contacts.length === 0;
-
     return (
       <WrapperPhonebook>
         <Title text="PhoneBook" />
-        {isSecondButtonVisible && !isNoContacts ? (
-          <p>Редагування</p>
-        ) : (
-          <InputForm onSubmit={this.WriteContact} />
+        {!isSearchVisible && (
+          <InputForm
+            onSubmit={this.handleWriteContact}
+            contacts={contacts}
+            updateContact={this.handleUpdateContact}
+            onUpdateContact={this.handleUpdateContact}
+          />
         )}
-
-        <ContactsTitle
-          text={
-            isSecondButtonVisible && !isNoContacts
-              ? "Contacts"
-              : "Загальна кількість"
-          }
-          contactCount={contacts.length} // Передаємо кількість контактів
-          onHandleClick={this.toggleSecondButtonVisibility}
-        />
-        {isSecondButtonVisible && !isNoContacts ? (
+        {!isSearchVisible && (
+          <CountMessage text={getCountMessage(contacts.length)} />
+        )}
+        {contacts.length !== 0 && (
+          <ShowButton
+            contactCount={contacts.length}
+            onButtonChange={this.handleToggleSecondButtonVisibility}
+          >
+            {!isSearchVisible && ""}
+          </ShowButton>
+        )}
+        {isSearchVisible && (
           <>
-            <Search valueSearch={searchText} onChange={this.ChangeFilter} />
-            <ContactList
-              contacts={filterContacts}
-              onDeleteContact={this.deleteContact}
+            <ContactsTitle text="Contacts" />
+            <Search
+              valueSearch={searchText}
+              onChange={this.ChangeFilter}
+              text={"Find contacts by name"}
             />
+            {filterContacts.length === 0 ? (
+              <p>There are no contacts matching the search criteria</p>
+            ) : (
+              <ContactList
+                contacts={filterContacts}
+                onDeleteContact={this.handleDeleteContact}
+              />
+            )}
           </>
-        ) : (
-          <p>Загальна кількість: {contacts.length}</p>
         )}
       </WrapperPhonebook>
     );
