@@ -8,7 +8,7 @@ import { ContactList } from "./components/Contactslist/contactList";
 import { ShowButton } from "./components/ShowButton/showButton";
 import { CountMessage } from "./components/CountMessage/CountMessage";
 import { getCountMessage } from "./utils/getCountMessage";
-import { save, load, remove } from "./utils/localStorageJSON";
+import { save, load } from "./utils/localStorageJSON";
 
 export const App = () => {
   const [contacts, setContacts] = useState([]);
