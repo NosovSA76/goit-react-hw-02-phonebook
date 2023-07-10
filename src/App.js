@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { useState, useEffect } from "react";
 import { WrapperPhonebook } from "./components/Phonebookwrapper/phonebookwrapper";
 import { Title } from "./components/Title/title";
 import { InputForm } from "./components/Addform/addform";
@@ -8,92 +8,96 @@ import { ContactList } from "./components/Contactslist/contactList";
 import { ShowButton } from "./components/ShowButton/showButton";
 import { CountMessage } from "./components/CountMessage/CountMessage";
 import { getCountMessage } from "./utils/getCountMessage";
-import { updateContact } from "./utils/updateContact";
-import { deleteContact } from "./utils/deleteContact";
-import { writeContact } from "./utils/writeContact";
-import { toggleSecondButtonVisibility } from "./utils/toggleSecondButtonVisibility";
+import { save, load, remove } from "./utils/localStorageJSON";
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    searchText: "",
-    isSecondButtonVisible: false,
+export const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [isSecondButtonVisible, setIsSecondButtonVisible] = useState(true);
+  const [filterContacts, setFilterContacts] = useState(contacts);
+
+  useEffect(() => {
+    save("contacts", contacts);
+  }, [contacts]);
+
+  useEffect(() => {
+    const loadedContacts = load("contacts");
+    if (loadedContacts) {
+      setContacts(loadedContacts);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchText) {
+      const normalSearchText = searchText.toLowerCase();
+      if (contacts.length > 0) {
+        const filtered = contacts.filter((contact) =>
+          contact.name.toLowerCase().includes(normalSearchText)
+        );
+        setFilterContacts(filtered);
+      } else {
+        setFilterContacts(contacts);
+      }
+    } else {
+      setFilterContacts(contacts);
+    }
+  }, [searchText, contacts]);
+
+  const changeFilter = (e) => {
+    setSearchText(e.currentTarget.value);
   };
 
-  componentDidMount() {
-    this.setState({ isSecondButtonVisible: true });
-  }
-
-  ChangeFilter = (e) => {
-    this.setState({ searchText: e.currentTarget.value });
+  const handleDeleteContact = (contactID) => {
+    setContacts(contacts.filter((contact) => contact.id !== contactID));
+    setIsSecondButtonVisible(contacts.length === 1);
   };
 
-  handleUpdateContact = (contactId, updatedContact) => {
-    this.setState((prevState) =>
-      updateContact(prevState, contactId, updatedContact)
-    );
+  const handleWriteContact = (newContact) => {
+    setContacts((prevContacts) => [...prevContacts, newContact]);
   };
 
-  handleDeleteContact = (contactID) => {
-    this.setState((prevState) => deleteContact(prevState, contactID));
+  const handleToggleSecondButtonVisibility = () => {
+    setIsSecondButtonVisible((prevVisibility) => !prevVisibility);
+    setFilterContacts(contacts);
   };
 
-  handleWriteContact = (newContact) => {
-    this.setState((prevState) => writeContact(prevState, newContact));
-  };
-
-  handleToggleSecondButtonVisibility = () => {
-    this.setState((prevState) => toggleSecondButtonVisibility(prevState));
-  };
-
-  render() {
-    const { searchText, contacts, isSearchVisible } = this.state;
-    const normalSearchText = searchText.toLocaleLowerCase();
-    const filterContacts = contacts.filter((contact) =>
-      contact.name.toLocaleLowerCase().includes(normalSearchText)
-    );
-
-    return (
-      <WrapperPhonebook>
-        <Title text="PhoneBook" />
-        {!isSearchVisible && (
-          <InputForm
-            onSubmit={this.handleWriteContact}
-            contacts={contacts}
-            updateContact={this.handleUpdateContact}
-            onUpdateContact={this.handleUpdateContact}
+  return (
+    <WrapperPhonebook>
+      <Title text="PhoneBook" />
+      {isSecondButtonVisible && (
+        <InputForm
+          onSubmit={handleWriteContact}
+          contacts={contacts}
+          onUpdateContact={setContacts}
+        />
+      )}
+      {isSecondButtonVisible && (
+        <CountMessage text={getCountMessage(contacts.length)} />
+      )}
+      {contacts.length !== 0 && (
+        <ShowButton
+          contactCount={contacts.length}
+          onButtonChange={handleToggleSecondButtonVisibility}
+        ></ShowButton>
+      )}
+      {!isSecondButtonVisible && (
+        <>
+          <ContactsTitle text="Contacts" />
+          <Search
+            valueSearch={searchText}
+            onChange={changeFilter}
+            text={"Find contacts by name"}
           />
-        )}
-        {!isSearchVisible && (
-          <CountMessage text={getCountMessage(contacts.length)} />
-        )}
-        {contacts.length !== 0 && (
-          <ShowButton
-            contactCount={contacts.length}
-            onButtonChange={this.handleToggleSecondButtonVisibility}
-          >
-            {!isSearchVisible && ""}
-          </ShowButton>
-        )}
-        {isSearchVisible && (
-          <>
-            <ContactsTitle text="Contacts" />
-            <Search
-              valueSearch={searchText}
-              onChange={this.ChangeFilter}
-              text={"Find contacts by name"}
+          {filterContacts.length === 0 ? (
+            <p>There are no contacts matching the search criteria</p>
+          ) : (
+            <ContactList
+              contacts={filterContacts}
+              onDeleteContact={handleDeleteContact}
             />
-            {filterContacts.length === 0 ? (
-              <p>There are no contacts matching the search criteria</p>
-            ) : (
-              <ContactList
-                contacts={filterContacts}
-                onDeleteContact={this.handleDeleteContact}
-              />
-            )}
-          </>
-        )}
-      </WrapperPhonebook>
-    );
-  }
-}
+          )}
+        </>
+      )}
+    </WrapperPhonebook>
+  );
+};
