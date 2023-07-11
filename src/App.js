@@ -11,7 +11,7 @@ import { getCountMessage } from "./utils/getCountMessage";
 import { save, load } from "./utils/localStorageJSON";
 
 export const App = () => {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(load("contacts") ?? []);
   const [searchText, setSearchText] = useState("");
   const [isSecondButtonVisible, setIsSecondButtonVisible] = useState(true);
   const [filterContacts, setFilterContacts] = useState(contacts);
@@ -19,13 +19,6 @@ export const App = () => {
   useEffect(() => {
     save("contacts", contacts);
   }, [contacts]);
-
-  useEffect(() => {
-    const loadedContacts = load("contacts");
-    if (loadedContacts) {
-      setContacts(loadedContacts);
-    }
-  }, []);
 
   useEffect(() => {
     if (searchText) {
