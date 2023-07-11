@@ -9,7 +9,7 @@ import {
   DeleteContacts,
 } from "./contactList.styled";
 
-export const ContactList = ({ contacts, onDeleteContact }) => {
+export const ContactList = ({ contacts, onDelete }) => {
   return (
     <ContactListContainer>
       {contacts.map((contact) => (
@@ -20,9 +20,9 @@ export const ContactList = ({ contacts, onDeleteContact }) => {
           </ContactsName>
           <ContactsPhone>
             <FcCellPhone size={24}></FcCellPhone>
-            {contact.phone}
+            {contact.number}
           </ContactsPhone>
-          <DeleteContacts onClick={() => onDeleteContact(contact.id)}>
+          <DeleteContacts onClick={() => onDelete(contact.id)}>
             Delete
           </DeleteContacts>
         </ContactListItem>
@@ -36,8 +36,8 @@ ContactList.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
-      phone: PropTypes.string.isRequired,
+      number: PropTypes.string.isRequired,
     })
   ).isRequired,
-  onDeleteContact: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 };

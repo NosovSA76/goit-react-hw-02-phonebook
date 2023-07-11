@@ -1,5 +1,4 @@
-import { useState } from "react";
-import shortid from "shortid";
+import React from "react";
 import PropTypes from "prop-types";
 import {
   NameInputTitle,
@@ -10,124 +9,92 @@ import {
   Submit,
 } from "./addform.styled";
 
-export const InputForm = ({ contacts, onUpdateContact, onSubmit }) => {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [id, setId] = useState("");
-
-  const ChangeName = (e) => {
-    const { value } = e.currentTarget;
-    const nameRegex = /^[a-zA-Zа-яА-ЯІіЇїЄєҐґ\s'-]+$/;
-    if (value !== "" && !nameRegex.test(value)) {
-      alert(
-        "Name may contain only letters, apostrophe, dash, spaces, and Cyrillic characters. For example Adrian, Jacob Mercer, Іван, Олена"
-      );
-      return;
-    }
-    setName(value);
+export class InputForm extends React.Component {
+  state = {
+    name: "",
+    number: "",
   };
 
-  const ChangePhone = (e) => {
-    const { value } = e.currentTarget;
-    const phoneRegex = /^[+\-\d]+$/;
-    if (value !== "") {
-      if (!phoneRegex.test(value)) {
-        alert("Phone may contain only +, -, and digits.");
-        return;
-      }
-      if (value.length > 15) {
-        alert("Phone number should not exceed 15 characters.");
-        return;
-      }
-    }
-    setId(shortid.generate());
-    setPhone(value);
-  };
+  // handleInputsChange = ({ target: { name, value } }) => {
+  //   this.setState({ [name]: value });
+  // };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (name.trim() === "" || phone.trim() === "") {
-      alert("Fill in all fields!");
-      return;
-    }
-    if (contacts) {
-      const existingContact = contacts.find(
-        (contact) => contact.name === name && contact.phone !== phone
-      );
-      const existingContactByName = contacts.find(
-        (contact) => contact.name === name && contact.phone === phone
-      );
-      const existingContactByPhone = contacts.find(
-        (contact) => contact.phone === phone
-      );
-
-      if (existingContact) {
-        if (
-          window.confirm(
-            "Another number is recorded for this contact, should I correct it?"
-          )
-        ) {
-          const updatedContacts = contacts.map((contact) =>
-            contact.id === existingContact.id
-              ? {
-                  ...existingContact,
-                  phone,
-                }
-              : contact
-          );
-          onUpdateContact(updatedContacts);
-        }
-        reset();
-        return;
-      }
-
-      if (existingContactByName) {
-        alert(`Such a contact already exists`);
-        return;
-      }
-
-      if (existingContactByPhone) {
+  handleInputsChange = ({ target: { name, value } }) => {
+    if (name === "name") {
+      const nameRegex = /^[a-zA-Zа-яА-ЯІіЇїЄєҐґ\s'-]+$/;
+      if (value !== "" && !nameRegex.test(value)) {
         alert(
-          `Such a phone number is recorded for ${existingContactByPhone.name}`
+          "Name may contain only letters, apostrophe, dash, spaces, and Cyrillic characters. For example Adrian, Jacob Mercer, Іван, Олена"
         );
         return;
       }
+    } else {
+      const phoneRegex = /^[+\-\d]+$/;
+      if (value !== "") {
+        if (!phoneRegex.test(value)) {
+          alert("Phone may contain only +, -, and digits.");
+          return;
+        }
+        if (value.length > 15) {
+          alert("Phone number should not exceed 15 characters.");
+          return;
+        }
+      }
     }
-
-    onSubmit({ name, phone, id });
-    reset();
+    this.setState({ [name]: value });
   };
 
-  const reset = () => {
-    setName("");
-    setPhone("");
-    setId("");
+  // const ChangePhone = (e) => {
+  //   const { value } = e.currentTarget;
+
+  //   setId(shortid.generate());
+  //   setPhone(value);
+  // };
+
+  reset() {
+    this.setState({ name: "", number: "" });
+  }
+
+  handleSubmit = (event) => {
+    event.preventDefault();
+
+    const newContactData = {
+      name: this.state.name,
+      number: this.state.number,
+    };
+
+    this.props.addContact(newContactData);
+    this.reset();
   };
 
-  return (
-    <SectionInputs onSubmit={handleSubmit}>
-      <NameInputTitle>
-        Name
-        <NameInput name="name" value={name} onChange={ChangeName} />
-      </NameInputTitle>
-      <PhoneInputTitle>
-        Phone
-        <PhoneInput name="phone" value={phone} onChange={ChangePhone} />
-      </PhoneInputTitle>
-      <Submit>Add contact</Submit>
-    </SectionInputs>
-  );
-};
+  static propTypes = {
+    addContact: PropTypes.func.isRequired,
+  };
 
-InputForm.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      phone: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  onUpdateContact: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-};
+  render() {
+    const { name, number } = this.state;
+
+    return (
+      <SectionInputs onSubmit={this.handleSubmit}>
+        <NameInputTitle className="name">Name</NameInputTitle>
+        <NameInput
+          type="text"
+          name="name"
+          value={name}
+          onChange={this.handleInputsChange}
+          required
+        />
+        <PhoneInputTitle className="number">Number</PhoneInputTitle>
+        <PhoneInput
+          type="tel"
+          name="number"
+          value={number}
+          onChange={this.handleInputsChange}
+          required
+        />
+
+        <Submit type="submit">Add contact</Submit>
+      </SectionInputs>
+    );
+  }
+}

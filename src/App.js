@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React from "react";
+import { nanoid } from "nanoid";
 import { WrapperPhonebook } from "./components/Phonebookwrapper/phonebookwrapper";
 import { Title } from "./components/Title/title";
 import { InputForm } from "./components/Addform/addform";
@@ -8,89 +9,110 @@ import { ContactList } from "./components/Contactslist/contactList";
 import { ShowButton } from "./components/ShowButton/showButton";
 import { CountMessage } from "./components/CountMessage/CountMessage";
 import { getCountMessage } from "./utils/getCountMessage";
-import { save, load } from "./utils/localStorageJSON";
 
-export const App = () => {
-  const [contacts, setContacts] = useState(load("contacts") ?? []);
-  const [searchText, setSearchText] = useState("");
-  const [isSecondButtonVisible, setIsSecondButtonVisible] = useState(true);
-  const [filterContacts, setFilterContacts] = useState(contacts);
+export class App extends React.Component {
+  state = {
+    contacts: [
+      { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
+      { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
+      { id: "id-3", name: "Eden Clements", number: "645-17-79" },
+      { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
+    ],
+    filter: "",
+    buttonVisible: true,
+  };
 
-  useEffect(() => {
-    save("contacts", contacts);
-  }, [contacts]);
+  handleAddContact = (newContactData) => {
+    const newContactEntity = {
+      id: nanoid(),
+      ...newContactData,
+    };
 
-  useEffect(() => {
-    if (searchText) {
-      const normalSearchText = searchText.toLowerCase();
-      if (contacts.length > 0) {
-        const filtered = contacts.filter((contact) =>
-          contact.name.toLowerCase().includes(normalSearchText)
-        );
-        setFilterContacts(filtered);
-      } else {
-        setFilterContacts(contacts);
-      }
-    } else {
-      setFilterContacts(contacts);
+    this.checkNewContactPresence(newContactEntity.name)
+      ? alert(`${newContactEntity.name} is already in contacts!`)
+      : this.setState((state) => ({
+          contacts: [...state.contacts, newContactEntity],
+        }));
+  };
+
+  handleDeleteContact = (contactId) => {
+    this.setState((state) => ({
+      contacts: state.contacts.filter((contact) => contact.id !== contactId),
+    }));
+    if (this.state.contacts.length === 1) {
+      this.setState((prevState) => {
+        return {
+          buttonVisible: !prevState.buttonVisible,
+        };
+      });
     }
-  }, [searchText, contacts]);
-
-  const changeFilter = (e) => {
-    setSearchText(e.currentTarget.value);
   };
 
-  const handleDeleteContact = (contactID) => {
-    setContacts(contacts.filter((contact) => contact.id !== contactID));
-    setIsSecondButtonVisible(contacts.length === 1);
+  handleFilterContactsByName = ({ target: { value } }) => {
+    this.setState(() => ({ filter: value }));
   };
 
-  const handleWriteContact = (newContact) => {
-    setContacts((prevContacts) => [...prevContacts, newContact]);
+  checkNewContactPresence = (contactName) => {
+    return this.state.contacts.some((contact) => contact.name === contactName);
   };
 
-  const handleToggleSecondButtonVisibility = () => {
-    setIsSecondButtonVisible((prevVisibility) => !prevVisibility);
-    setFilterContacts(contacts);
+  handleToggleSecondButtonVisibility = () => {
+    this.setState((prevState) => {
+      return {
+        buttonVisible: !prevState.buttonVisible,
+      };
+    });
+    console.log("click");
+    // setFilterContacts(contacts);
   };
 
-  return (
-    <WrapperPhonebook>
-      <Title text="PhoneBook" />
-      {isSecondButtonVisible && (
-        <InputForm
-          onSubmit={handleWriteContact}
-          contacts={contacts}
-          onUpdateContact={setContacts}
-        />
-      )}
-      {isSecondButtonVisible && (
-        <CountMessage text={getCountMessage(contacts.length)} />
-      )}
-      {contacts.length !== 0 && (
-        <ShowButton
-          contactCount={contacts.length}
-          onButtonChange={handleToggleSecondButtonVisibility}
-        ></ShowButton>
-      )}
-      {!isSecondButtonVisible && (
-        <>
-          <ContactsTitle text="Contacts" />
-          <Search
-            valueSearch={searchText}
-            onChange={changeFilter}
-            text={"Find contacts by name"}
+  render() {
+    const { contacts, filter, buttonVisible } = this.state;
+    const contactsFilteredByName = contacts.filter((contact) =>
+      contact.name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    return (
+      <WrapperPhonebook>
+        <Title text="PhoneBook" />
+        {buttonVisible && (
+          <InputForm
+            addContact={this.handleAddContact}
+            // contacts={contacts}
+            // onUpdateContact={setContacts}
           />
-          {filterContacts.length === 0 ? (
-            <p>There are no contacts matching the search criteria</p>
-          ) : (
-            <ContactList
-              contacts={filterContacts}
-              onDeleteContact={handleDeleteContact}
+        )}
+        {buttonVisible && (
+          <CountMessage text={getCountMessage(contacts.length)} />
+        )}
+        {contacts.length !== 0 && (
+          <ShowButton
+            contactCount={contacts.length}
+            onButtonChange={this.handleToggleSecondButtonVisibility}
+          ></ShowButton>
+        )}
+        {!buttonVisible && (
+          <>
+            <ContactsTitle text="Contacts" />
+            <Search
+              filter={filter}
+              onChange={this.handleFilterContactsByName}
+              // valueSearch={searchText}
+              // onChange={changeFilter}
+              text={"Find contacts by name"}
             />
-          )}
-        </>
-      )}
-    </WrapperPhonebook>
-  );
-};
+            {/* {filterContacts.length === 0 ? ( */}
+            {/* <p>There are no contacts matching the search criteria</p> */}
+            {/* ) : ( */}
+            <ContactList
+              contacts={contactsFilteredByName}
+              onDelete={this.handleDeleteContact}
+              // contacts={filterContacts}
+              // onDeleteContact={handleDeleteContact}
+            />
+          </>
+        )}
+      </WrapperPhonebook>
+    );
+  }
+}
